@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>测试Nginx</title>
+    <script src="http://code.jquery.com/jquery-3.3.1.js"></script>
+</head>
+<body>
+小小小
+<script>
+    $.ajax({
+        url:"http://localhost/ourpai/viewIndex",
+        type : "get",
+        dataType : "JSON",
+        success:function(result){
+            console.log("进入ajax")
+            console.log(result)
+        },
+        error:function(xhr,status,error){
+            console.log("ajax-error")
+            console.log(xhr)
+            console.log(status)
+            console.log(error)
+        }
+    });
+</script>
+</body>
+</html>
