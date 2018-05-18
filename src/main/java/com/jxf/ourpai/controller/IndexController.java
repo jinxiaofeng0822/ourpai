@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 public class IndexController {
@@ -22,8 +24,13 @@ public class IndexController {
     public String viewIndex(HttpServletRequest request){
         viewCount++;
         log.info("有{}个访问了",viewCount);
-        log.info("访问人ip地址是:{}",request.getRemoteAddr());
-        vi.insert();
+        String Xrealip = request.getHeader("X-real-ip");
+        String XForwardedFor = request.getHeader("X-Forwarded-For");
+        log.info("Xrealip-{}",Xrealip);
+        log.info("XForwardedFor-{}",XForwardedFor);
+        Map<String,Object> map = new HashMap<>();
+        map.put("ip",Xrealip);
+        vi.insert(map);
         return "{\"hello\":\"qqq\"}";
     }
 
