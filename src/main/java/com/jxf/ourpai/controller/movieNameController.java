@@ -1,16 +1,17 @@
 package com.jxf.ourpai.controller;
 
 import com.jxf.ourpai.dao.mapper.write.MovieNameMapper;
-import com.jxf.ourpai.model.MovieName;
+import com.jxf.ourpai.model.FileInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
-import java.util.ArrayDeque;
-import java.util.Queue;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Stack;
 
 /**
@@ -25,74 +26,54 @@ public class movieNameController {
 
     @RequestMapping("/addName")
     public String addName() {
-        MovieName mn = new MovieName();
-        mn.setMovieName("电影名字");
-        mn.setFullpathName("路径123123");
-        mapper.insertSelective(mn);
-        return "{\"ret\":\"1\"}";
-    }
-
-    public static void main(String[] args) {
-        int count = 0;
-        File file = new File("C:\\Users\\小风\\Desktop\\testfile");
-        System.out.println(file.exists());
-
-        Queue<File> queue = new ArrayDeque<>();//保存目录
+        File file = new File("E:\\电影");
         Stack<File> stack = new Stack<>();
-
-        //这里的栈，类似深度优先搜索
-        File[] files = file.listFiles();
-        for (int i = 0; i < files.length; i++) {
-            if (files[i].isFile()) {
-                count++;
-                System.out.println(files[i].getPath());
-            } else {
-                stack.push(files[i]);
-            }
-        }
-
+        stack.push(file);
+        log.info("开始保存===");
         while (stack.size() != 0) {
             File pf = stack.pop();
             File[] pfs = pf.listFiles();
             for (int i = 0; i < pfs.length; i++) {
                 if (pfs[i].isFile()) {
-                    count++;
-                    System.out.println(pfs[i].getPath());
+                    log.info(pfs[i].getPath());
+                    try {
+                        //保存到数据库
+                        FileInfo mn = new FileInfo();
+                        mn.setMovieName(pfs[i].getName());
+                        mn.setDirectPath(pfs[i].getParentFile().getName());
+                        mn.setFullpathName(pfs[i].getPath());
+                        mn.setFileType(getFileType(pfs[i].getName()));
+                        mn.setFileSize(Double.valueOf(pfs[i].length()));
+                        mn.setMd5(DigestUtils.md5DigestAsHex(new FileInputStream(pfs[i].getPath())));
+                        mapper.insertSelective(mn);
+                    } catch (Exception e) {
+                        log.error("保存文件出错" + pfs[i].getPath(), e);
+                    }
+
                 } else {
                     stack.push(pfs[i]);
                 }
             }
         }
-        System.out.println("执行完毕");
-        System.out.println("共有" + count + "个文件");
+        log.info("执行完毕");
+        return "{\"ret\":\"1\"}";
+    }
 
-        System.out.println("开始队列打印");
-        file.listFiles();
-        count=0;
-        for (int i = 0; i < files.length; i++) {
-            if(files[i].isFile()){
-                count++;
-                System.out.println(files[i].getPath());
-            }else{
-                queue.add(files[i]);
-            }
+    private String getFileType(String fileName) {
+        int point = fileName.lastIndexOf(".");
+        if (point != -1) {
+            return fileName.substring(point);
+        } else {
+            return "unkown";
         }
+    }
 
-
-        while (queue.size()!=0){
-            File pf = queue.poll();
-            File[] pfs = pf.listFiles();
-            for (int i = 0; i < pfs.length; i++) {
-                if(pfs[i].isFile()){
-                    count++;
-                    System.out.println(pfs[i].getPath());
-                }else{
-                    queue.add(pfs[i]);
-                }
-            }
+    public static void main(String[] args) {
+        try {
+            String md5 = DigestUtils.md5DigestAsHex(new FileInputStream("C:\\Users\\小风\\Desktop\\testfile\\f1.txt"));
+            System.out.println(md5);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        System.out.println("执行完毕");
-        System.out.println("共有" + count + "个文件");
     }
 }
